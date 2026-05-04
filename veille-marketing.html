@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Veille IA — Marketing</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #1a1a2e;
+      --accent: #e94560;
+      --accent2: #0f3460;
+      --surface: #16213e;
+      --card: #1f2b4a;
+      --text: #e8eaf6;
+      --muted: #8892b0;
+      --border: #2a3a5e;
+      --tag-ai: #7c3aed;
+      --tag-data: #0891b2;
+      --tag-social: #059669;
+      --tag-content: #d97706;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--primary);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0;
+    }
+
+    /* HEADER */
+    header {
+      background: linear-gradient(135deg, var(--accent2) 0%, var(--primary) 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(8px);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo-icon {
+      width: 42px;
+      height: 42px;
+      background: var(--accent);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    h1 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+
+    h1 span {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 400;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .date-badge {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid var(--border);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    #refresh-btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 18px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      transition: all 0.2s;
+    }
+    #refresh-btn:hover { filter: brightness(1.15); transform: translateY(-1px); }
+    #refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .spin { animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* MAIN */
+    main { max-width: 960px; margin: 0 auto; padding: 32px 20px 60px; }
+
+    /* STATUS BAR */
+    #status-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 28px;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      flex-shrink: 0;
+    }
+    .status-dot.loading { background: #f59e0b; animation: pulse 1s ease-in-out infinite; }
+    .status-dot.error   { background: var(--accent); }
+
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* FILTER BAR */
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    .filter-btn {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 20px;
+      padding: 5px 13px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .filter-btn:hover { border-color: var(--accent); color: var(--text); }
+    .filter-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    /* GRID */
+    #articles-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    /* CARD */
+    .article-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 22px;
+      display: grid;
+      grid-template-columns: 36px 1fr;
+      gap: 0 14px;
+      transition: all 0.2s;
+      text-decoration: none;
+      color: inherit;
+      position: relative;
+      overflow: hidden;
+    }
+    .article-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: var(--accent);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .article-card:hover { border-color: var(--accent); transform: translateX(4px); }
+    .article-card:hover::before { opacity: 1; }
+
+    .card-rank {
+      grid-column: 1;
+      grid-row: 1 / 4;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 3px;
+    }
+
+    .rank-num {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--border);
+      line-height: 1;
+    }
+    .article-card:nth-child(1) .rank-num { color: #f59e0b; }
+    .article-card:nth-child(2) .rank-num { color: var(--muted); }
+    .article-card:nth-child(3) .rank-num { color: #92400e; }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 6px;
+    }
+
+    .source-name {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .separator { color: var(--border); font-size: 0.8rem; }
+
+    .article-date {
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+
+    .tag {
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .tag-ai      { background: rgba(124,58,237,0.2); color: #a78bfa; }
+    .tag-data    { background: rgba(8,145,178,0.2);  color: #67e8f9; }
+    .tag-social  { background: rgba(5,150,105,0.2);  color: #6ee7b7; }
+    .tag-content { background: rgba(217,119,6,0.2);  color: #fcd34d; }
+    .tag-seo     { background: rgba(99,102,241,0.2); color: #a5b4fc; }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      line-height: 1.4;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .card-summary {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.6;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* SKELETON */
+    .skeleton-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 22px;
+      height: 110px;
+    }
+    .skeleton-line {
+      background: linear-gradient(90deg, var(--border) 25%, #2d3f6e 50%, var(--border) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 4px;
+      height: 12px;
+      margin-bottom: 10px;
+    }
+    .skeleton-line.wide  { width: 80%; }
+    .skeleton-line.short { width: 40%; }
+    .skeleton-line.xshort { width: 25%; height: 8px; }
+    @keyframes shimmer { from{background-position:200%} to{background-position:-200%} }
+
+    /* ERROR */
+    .error-box {
+      background: rgba(233,69,96,0.1);
+      border: 1px solid rgba(233,69,96,0.3);
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      color: var(--accent);
+    }
+    .error-box p { font-size: 0.85rem; color: var(--muted); margin-top: 8px; }
+
+    /* CACHE NOTICE */
+    .cache-notice {
+      background: rgba(245,158,11,0.1);
+      border: 1px solid rgba(245,158,11,0.25);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.78rem;
+      color: #fcd34d;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* FOOTER */
+    footer {
+      text-align: center;
+      color: var(--border);
+      font-size: 0.72rem;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="logo-icon">📡</div>
+    <h1>
+      Veille Marketing
+      <span>IA · Agrégateur quotidien</span>
+    </h1>
+  </div>
+  <div class="header-right">
+    <div class="date-badge" id="today-date"></div>
+    <button id="refresh-btn" onclick="fetchAll(true)">
+      <svg id="refresh-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+      </svg>
+      Actualiser
+    </button>
+  </div>
+</header>
+
+<main>
+  <div id="status-bar">
+    <div class="status-dot loading" id="status-dot"></div>
+    <span id="status-text">Chargement des sources…</span>
+  </div>
+
+  <div class="filter-bar" id="filter-bar">
+    <button class="filter-btn active" data-tag="all" onclick="filterCards('all', this)">Tous</button>
+    <button class="filter-btn" data-tag="ai"      onclick="filterCards('ai', this)">🤖 IA & Tech</button>
+    <button class="filter-btn" data-tag="social"  onclick="filterCards('social', this)">📱 Social Media</button>
+    <button class="filter-btn" data-tag="content" onclick="filterCards('content', this)">✍️ Content</button>
+    <button class="filter-btn" data-tag="data"    onclick="filterCards('data', this)">📊 Data</button>
+    <button class="filter-btn" data-tag="seo"     onclick="filterCards('seo', this)">🔍 SEO</button>
+  </div>
+
+  <div id="cache-notice" style="display:none" class="cache-notice">
+    ⚡ Résultats mis en cache d'aujourd'hui — cliquez sur Actualiser pour forcer le rechargement.
+  </div>
+
+  <div id="articles-grid">
+    <!-- skeleton -->
+    <div class="skeleton-card"><div class="skeleton-line xshort"></div><div class="skeleton-line wide"></div><div class="skeleton-line short"></div></div>
+    <div class="skeleton-card"><div class="skeleton-line xshort"></div><div class="skeleton-line wide"></div><div class="skeleton-line short"></div></div>
+    <div class="skeleton-card"><div class="skeleton-line xshort"></div><div class="skeleton-line wide"></div><div class="skeleton-line short"></div></div>
+    <div class="skeleton-card"><div class="skeleton-line xshort"></div><div class="skeleton-line wide"></div><div class="skeleton-line short"></div></div>
+    <div class="skeleton-card"><div class="skeleton-line xshort"></div><div class="skeleton-line wide"></div><div class="skeleton-line short"></div></div>
+    <div class="skeleton-card"><div class="skeleton-line xshort"></div><div class="skeleton-line wide"></div><div class="skeleton-line short"></div></div>
+    <div class="skeleton-card"><div class="skeleton-line xshort"></div><div class="skeleton-line wide"></div><div class="skeleton-line short"></div></div>
+  </div>
+</main>
+
+<footer>Veille IA Marketing — données agrégées depuis des sources publiques RSS · IMT-BS</footer>
+
+<script>
+/* ─── SOURCES RSS ─────────────────────────────────────────────────────── */
+const SOURCES = [
+  { name: 'Digiday',             url: 'https://digiday.com/feed/',                              tags: ['content','social'] },
+  { name: 'Search Engine Land',  url: 'https://searchengineland.com/feed',                      tags: ['seo','data'] },
+  { name: 'Social Media Examiner',url: 'https://www.socialmediaexaminer.com/feed/',              tags: ['social'] },
+  { name: 'Content Mkt Inst.',   url: 'https://contentmarketinginstitute.com/feed/',            tags: ['content'] },
+  { name: 'MarTech Series',      url: 'https://martechseries.com/feed/',                        tags: ['ai','data'] },
+  { name: 'HubSpot Blog',        url: 'https://blog.hubspot.com/marketing/rss.xml',             tags: ['content','data'] },
+  { name: 'Neil Patel',          url: 'https://neilpatel.com/blog/rss/',                        tags: ['seo','content'] },
+  { name: 'Sprout Social',       url: 'https://sproutsocial.com/insights/feed/',                tags: ['social','data'] },
+  { name: 'Convince & Convert',  url: 'https://www.convinceandconvert.com/feed/',               tags: ['content'] },
+  { name: 'Marketing Week',      url: 'https://www.marketingweek.com/feed/',                    tags: ['content'] },
+];
+
+const CACHE_KEY  = 'veille_marketing_cache';
+const CACHE_DATE = 'veille_marketing_date';
+
+/* ─── KEYWORDS ────────────────────────────────────────────────────────── */
+const KW_SCORE = {
+  ai:      ['ia ', 'intelligence artificielle', 'artificial intelligence', 'ai ', 'chatgpt', 'gpt', 'llm', 'machine learning', 'automation', 'automatisation', 'generative', 'génératif'],
+  data:    ['data', 'analytics', 'cro', 'conversion', 'attribution', 'tracking', 'roi', 'metric', 'dashboard'],
+  social:  ['social media', 'instagram', 'tiktok', 'linkedin', 'facebook', 'twitter', 'x.com', 'influenc', 'creator', 'community'],
+  content: ['content', 'content marketing', 'brand', 'storytelling', 'copywriting', 'editorial', 'ux writing', 'blog'],
+  seo:     ['seo', 'sem', 'ppc', 'search', 'google', 'bing', 'organic', 'keyword', 'serp', 'rank'],
+};
+
+/* ─── UTILITY ─────────────────────────────────────────────────────────── */
+function todayStr() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function relativeDate(dateStr) {
+  const d   = new Date(dateStr);
+  const now = new Date();
+  const h   = Math.floor((now - d) / 3600000);
+  if (h < 1)  return 'À l\'instant';
+  if (h < 24) return `Il y a ${h}h`;
+  const days = Math.floor(h / 24);
+  if (days === 1) return 'Hier';
+  return `Il y a ${days}j`;
+}
+
+function formatDate(dateStr) {
+  return new Date(dateStr).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+function classifyTags(text) {
+  const lower = text.toLowerCase();
+  const tags  = [];
+  for (const [tag, kws] of Object.entries(KW_SCORE)) {
+    if (kws.some(k => lower.includes(k))) tags.push(tag);
+  }
+  return tags.length ? tags : ['content'];
+}
+
+function scoreArticle(item) {
+  const text    = ((item.title || '') + ' ' + (item.description || '')).toLowerCase();
+  const ageMs   = Date.now() - new Date(item.pubDate).getTime();
+  const ageDays = ageMs / 86400000;
+
+  // Recency score (max 50 pts, halves every 2 days)
+  const recency = Math.max(0, 50 * Math.exp(-0.35 * ageDays));
+
+  // Keyword score (max 50 pts)
+  let kw = 0;
+  for (const words of Object.values(KW_SCORE)) {
+    for (const w of words) {
+      if (text.includes(w)) kw += 5;
+    }
+  }
+  kw = Math.min(50, kw);
+
+  // Penalty for older than 7 days
+  const penalty = ageDays > 7 ? -30 : 0;
+
+  return recency + kw + penalty;
+}
+
+function stripHtml(html) {
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  return tmp.textContent || tmp.innerText || '';
+}
+
+/* ─── FETCH — cascade de 3 proxies ───────────────────────────────────── */
+function parseRssXml(xmlText, source) {
+  try {
+    const doc   = new DOMParser().parseFromString(xmlText, 'text/xml');
+    const items = [...doc.querySelectorAll('item'), ...doc.querySelectorAll('entry')];
+    return items.slice(0, 15).map(el => {
+      const get  = sel => el.querySelector(sel)?.textContent?.trim() || '';
+      const link = el.querySelector('link')?.getAttribute('href') || get('link') || '#';
+      return {
+        title:       get('title') || 'Sans titre',
+        description: stripHtml(get('description') || get('summary') || get('content')).slice(0, 280),
+        link,
+        pubDate:     get('pubDate') || get('published') || get('updated') || new Date().toISOString(),
+        source:      source.name,
+        baseTags:    source.tags,
+      };
+    }).filter(a => a.title !== 'Sans titre');
+  } catch { return []; }
+}
+
+async function fetchFeed(source) {
+  const encoded = encodeURIComponent(source.url);
+  const opts    = { signal: AbortSignal.timeout(9000) };
+
+  // Proxy 1 : rss2json (retourne JSON directement)
+  try {
+    const r = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encoded}&count=15`, opts);
+    const d = await r.json();
+    if (d.status === 'ok' && d.items?.length > 0) {
+      return d.items.map(item => ({
+        title:       item.title || 'Sans titre',
+        description: stripHtml(item.description || item.content || '').slice(0, 280),
+        link:        item.link || item.url || '#',
+        pubDate:     item.pubDate || new Date().toISOString(),
+        source:      source.name,
+        baseTags:    source.tags,
+      }));
+    }
+  } catch {}
+
+  // Proxy 2 : corsproxy.io + parse XML
+  try {
+    const r    = await fetch(`https://corsproxy.io/?${encoded}`, opts);
+    const text = await r.text();
+    const res  = parseRssXml(text, source);
+    if (res.length > 0) return res;
+  } catch {}
+
+  // Proxy 3 : allorigins + parse XML
+  try {
+    const r    = await fetch(`https://api.allorigins.win/raw?url=${encoded}`, opts);
+    const text = await r.text();
+    return parseRssXml(text, source);
+  } catch {}
+
+  return [];
+}
+
+async function fetchAll(force = false) {
+  const today = todayStr();
+  const btn   = document.getElementById('refresh-btn');
+  const icon  = document.getElementById('refresh-icon');
+
+  // Cache check
+  if (!force) {
+    const cached = localStorage.getItem(CACHE_KEY);
+    const cDate  = localStorage.getItem(CACHE_DATE);
+    if (cached && cDate === today) {
+      renderArticles(JSON.parse(cached));
+      document.getElementById('cache-notice').style.display = 'flex';
+      setStatus('ok', `${JSON.parse(cached).length} articles chargés depuis le cache (${today})`);
+      return;
+    }
+  }
+
+  document.getElementById('cache-notice').style.display = 'none';
+  btn.disabled = true;
+  icon.classList.add('spin');
+  setStatus('loading', 'Interrogation des sources RSS…');
+  renderSkeleton();
+
+  const results = await Promise.allSettled(SOURCES.map(fetchFeed));
+  let all = results.flatMap(r => r.status === 'fulfilled' ? r.value : []);
+
+  // Deduplicate by title similarity
+  const seen = new Set();
+  all = all.filter(a => {
+    const key = a.title.toLowerCase().slice(0, 60);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  // Score & sort
+  all.forEach(a => {
+    a.score = scoreArticle(a);
+    a.tags  = classifyTags(a.title + ' ' + a.description);
+  });
+  all.sort((a, b) => b.score - a.score);
+
+  const top7 = all.slice(0, 7);
+
+  if (top7.length === 0) {
+    showError();
+  } else {
+    localStorage.setItem(CACHE_KEY,  JSON.stringify(top7));
+    localStorage.setItem(CACHE_DATE, today);
+    renderArticles(top7);
+    setStatus('ok', `Top 7 mis à jour · ${all.length} articles analysés · ${new Date().toLocaleTimeString('fr-FR')}`);
+  }
+
+  btn.disabled = false;
+  icon.classList.remove('spin');
+}
+
+/* ─── RENDER ──────────────────────────────────────────────────────────── */
+function tagHtml(tag) {
+  const labels = { ai:'🤖 IA', data:'📊 Data', social:'📱 Social', content:'✍️ Content', seo:'🔍 SEO' };
+  return `<span class="tag tag-${tag}">${labels[tag] || tag}</span>`;
+}
+
+function renderArticles(articles) {
+  const grid = document.getElementById('articles-grid');
+  grid.innerHTML = '';
+  articles.forEach((a, i) => {
+    const card = document.createElement('a');
+    card.href    = a.link;
+    card.target  = '_blank';
+    card.rel     = 'noopener noreferrer';
+    card.className = 'article-card';
+    card.innerHTML = `
+      <div class="card-rank"><div class="rank-num">${i + 1}</div></div>
+      <div>
+        <div class="card-meta">
+          <span class="source-name">${a.source}</span>
+          <span class="separator">·</span>
+          <span class="article-date" title="${formatDate(a.pubDate)}">${relativeDate(a.pubDate)}</span>
+          ${a.tags.slice(0, 2).map(tagHtml).join('')}
+        </div>
+        <div class="card-title">${a.title}</div>
+        <div class="card-summary">${a.description}</div>
+      </div>
+    `;
+    // Store tags for filtering
+    card.dataset.tags = a.tags.join(',');
+    grid.appendChild(card);
+  });
+
+  // Re-apply active filter
+  const activeBtn = document.querySelector('.filter-btn.active');
+  if (activeBtn && activeBtn.dataset.tag !== 'all') {
+    filterCards(activeBtn.dataset.tag, activeBtn);
+  }
+}
+
+function renderSkeleton() {
+  const grid = document.getElementById('articles-grid');
+  grid.innerHTML = Array(7).fill(0).map(() => `
+    <div class="skeleton-card">
+      <div class="skeleton-line xshort" style="width:25%"></div>
+      <div class="skeleton-line wide"   style="width:80%;margin-top:10px"></div>
+      <div class="skeleton-line short"  style="width:55%"></div>
+    </div>
+  `).join('');
+}
+
+function showError() {
+  document.getElementById('articles-grid').innerHTML = `
+    <div class="error-box">
+      <strong>⚠️ Impossible de charger les articles</strong>
+      <p>Vérifiez votre connexion internet ou réessayez dans quelques instants.</p>
+    </div>
+  `;
+  setStatus('error', 'Erreur de chargement');
+}
+
+function setStatus(type, text) {
+  const dot  = document.getElementById('status-dot');
+  const span = document.getElementById('status-text');
+  dot.className = 'status-dot ' + (type === 'loading' ? 'loading' : type === 'error' ? 'error' : '');
+  span.textContent = text;
+}
+
+/* ─── FILTER ──────────────────────────────────────────────────────────── */
+function filterCards(tag, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  document.querySelectorAll('.article-card').forEach(card => {
+    const tags = card.dataset.tags || '';
+    card.style.display = (tag === 'all' || tags.includes(tag)) ? '' : 'none';
+  });
+}
+
+/* ─── INIT ────────────────────────────────────────────────────────────── */
+document.getElementById('today-date').textContent = new Date().toLocaleDateString('fr-FR', {
+  weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+});
+
+fetchAll(false);
+</script>
+</body>
+</html>
